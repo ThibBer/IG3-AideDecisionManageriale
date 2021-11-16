@@ -76,13 +76,14 @@ function testCarréUnite(suiteUns) {
     for (let i = valeurs.length - 2; i >= 0; i--) {
         while (i >= 0 && valeurs[i].pi * n < 5) {
             valeurs[i].pi += valeurs[i + 1].pi;
+            valeurs[i].ri += valeurs[i + 1].ri;
             delete valeurs[i + 1];
             i--;
         }
     }
     console.log(n);
     valeurs.forEach((v, i) => {
-        console.log((i + 1) / 10, v.pi * n);
+        console.log((i + 1) / 10, v.ri, v.pi * n);
     });
 }
 

@@ -52,25 +52,38 @@ function* genPi() {
 }
 
 function testCarréUnite(suiteUns) {
-    const nbGroupes = parseInt(suiteUns.length / 4, 10);
-    const valeurs = {};
+    const n = Math.floor(suiteUns.length / 4);
+    const valeurs = [];
     const pi = genPi();
-    for (let x = 1; x <= 20; x += 1) {
+    for (let x = 0; x < 20; x += 1) {
         valeurs[x] = {
             ri: 0,
             pi: pi.next().value,
         };
     }
-    for (let n = 0; n < nbGroupes; n += 3) {
+    for (let n = 0; n <= suiteUns.length - 4; n += 4) {
         const distance = distanceCarre(
             suiteUns[n],
             suiteUns[n + 1],
             suiteUns[n + 2],
             suiteUns[n + 3]
         );
-        const val = Math.ceil(distance * 10);
+        const val = Math.floor(distance * 10);
         valeurs[val].ri += 1;
     }
+    //! Attention, vérifier la méthode pour rassembler les nombres
+    //! Ici, on commence par le bas et on remonte en additionnant tant qu'on a pas npi > 5
+    for (let i = valeurs.length - 2; i >= 0; i--) {
+        while (i >= 0 && valeurs[i].pi * n < 5) {
+            valeurs[i].pi += valeurs[i + 1].pi;
+            delete valeurs[i + 1];
+            i--;
+        }
+    }
+    console.log(n);
+    valeurs.forEach((v, i) => {
+        console.log((i + 1) / 10, v.pi * n);
+    });
 }
 
 const m = 63;
@@ -83,4 +96,9 @@ const suiteUn = Uns(suite, m);
 
 console.log(suite);
 console.log(suiteUn);
-testCarréUnite(suiteUn);
+// juste pour avoir une liste assez longue pour les tests
+const test = [];
+for (let i = 0; i < 1000; i++) {
+    test[i] = Math.random();
+}
+testCarréUnite(test);

@@ -5,7 +5,7 @@ function factor(m){
         if (m % i){
             i++;
         } else {
-            m -= i;
+            m /= i;
             factors.add(i);
         }
     }

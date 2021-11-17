@@ -1,33 +1,30 @@
-// Code fait par joachim le 16/11
 function factor(m){
     i = 2;
-    factors = [];
+    factors = new Set(); // set() supprime les doublons en python
     while (i * i <= m){
         if (m % i){
             i++;
         }
         else{
             m -= i;
-            factors.push(i);
+            factors.add(i);
         }
     }
-        
     if (m > 1){
-        factors.push(m);
+        factors.add(m);
     }
-        
-    return Array.from(new Set(factors)); // set() supprime les doublons en python
+    return Array.from(factors); 
 }
-function a_1_multiply_p(list, a){
-    for (p in list){
+function aM1MultiplyP(list, a){
+    for (p of list){
         if ((a-1)%p==0){
-            is_a_1_multiply_p = true;
+            isAM1MultiplyP = true;
         } 
         else{
             return false;
         }
     }
-    return is_a_1_multiply_p;
+    return isAM1MultiplyP;
 }
 
 function verificationThHullDobell(m,a,c,x0){
@@ -37,51 +34,51 @@ function verificationThHullDobell(m,a,c,x0){
 
     // 1) if c and m are first between us
 
-    m_factors = factor(m);
-    console.log(m_factors);
+    const mFactors = factor(m);
+    console.log(mFactors);
 
-    c_factors = factor(c);
-    console.log(c_factors);
+    const cFactors = factor(c);
+    console.log(cFactors);
 
-    is_first = true;
-    for (x in m_factors){
-        if (x in c_factors){
-            is_first = false;
+    isFirst = true;
+    for (x of mFactors){
+        console.log(x);
+        if (x in cFactors){
+            isFirst = false;
         }
     }
-    console.log(is_first ? "c et m sont premiers entre eux !" : "c et m ne sont pas premiers entre eux !");
+    console.log(isFirst ? "c et m sont premiers entre eux !" : "c et m ne sont pas premiers entre eux !", isFirst);
 
 
     // 2) if for all m factors called p, a-1 is multiply of p
-    is_a_1_multiply_p = a_1_multiply_p(m_factors,a);
+    isAM1MultiplyP = aM1MultiplyP(mFactors,a);
 
-    console.log(is_a_1_multiply_p ?"a-1 est multiple de chaque facteur premier de m " : "a-1 n'est pas multiple de chaque facteur premier de m");
+    console.log(isAM1MultiplyP ?"a-1 est multiple de chaque facteur premier de m " : "a-1 n'est pas multiple de chaque facteur premier de m",isAM1MultiplyP);
 
     // 
     //  3) if m is multiply of 4 then a-1 est multiple of 4
     // 
     if (m%4==0){
-        is_multiply_4 = (a-1)%4==0
+        isMultiply4 = (a-1)%4==0
     }
     else{
-        is_multiply_4 = true;
+        isMultiply4 = true;
     }
         
 
-    console.log(is_multiply_4 ?"m est multiple de 4, alors a-1 est multiple de 4 : " : "m n'est pas multiple de 4");
+    console.log(isMultiply4 ?"m est multiple de 4, alors a-1 est multiple de 4 : " : "m n'est pas multiple de 4",isMultiply4);
     // a vérifiez pour la formulation je suis pas sur
 
     // 
     // 4) Conclusion of the Hull-Dobell theorem
     // 
-    if (is_first && is_a_1_multiply_p && is_multiply_4){
+    if (isFirst && isAM1MultiplyP && isMultiply4){
         console.log(`La suite de nombre pseudo-aléatoire est de période = ${m}`);
     }
         else{
             console.log(`La longueur de la suite sera inférieure à ${m}`);
         }
 }
-// fin du code de joachim
 
 function generationSuiteAleatoire(m, a, c, x0){
     return suiteAleatoire(m, a, c, x0);
@@ -124,9 +121,7 @@ const a = 5;
 const c = 5;
 const x0 = 3;
 
-// code joachim 16/11
 verificationThHullDobell(m,a,c,x0);
-// fin code joachim 16/11
 
 const suite = generationSuiteAleatoire(m, a, c, x0);
 const suiteUn = Uns(suite, m);

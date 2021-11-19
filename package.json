@@ -1,0 +1,27 @@
+{
+    "name": "ig3-aidedecisionmanageriale",
+    "version": "1.0.0",
+    "description": "",
+    "main": "partie1.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "nodemon partie1.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ThibBer/IG3-AideDecisionManageriale.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/ThibBer/IG3-AideDecisionManageriale/issues"
+    },
+    "homepage": "https://github.com/ThibBer/IG3-AideDecisionManageriale#readme",
+    "devDependencies": {
+        "nodemon": "^2.0.15"
+    },
+    "dependencies": {
+        "chi-squared": "^1.1.0"
+    },
+    "type": "module"
+}

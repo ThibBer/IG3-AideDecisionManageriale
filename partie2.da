@@ -1,0 +1,11 @@
+module(nbStationsOptimal;s;d)
+---*
+
+Par minute
+1. faire les entrées de client
+2. vérifier la priorité des clients
+3. traiter la file
+4. faire la sortie
+
+
+----

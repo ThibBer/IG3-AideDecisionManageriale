@@ -1,100 +1,5 @@
-function factor(m) {
-    let i = 2;
-    const factors = new Set(); // set() supprime les doublons en python
-
-    while (i * i <= m) {
-        if (m % i) {
-            i++;
-        } else {
-            m /= i;
-            factors.add(i);
-        }
-    }
-
-    if (m > 1) {
-        factors.add(m);
-    }
-
-    return Array.from(factors);
-}
-
-function aM1MultiplyP(list, a) {
-    let isAM1MultiplyP;
-    for (const p of list) {
-        if ((a - 1) % p == 0) {
-            isAM1MultiplyP = true;
-        } else {
-            return false;
-        }
-    }
-
-    return isAM1MultiplyP;
-}
-
-function verificationThHullDobell(m, a, c, x0) {
-    // Hull-Dobel theorem
-
-    // to know if the period will be m long or less
-
-    // 1) if c and m are prime between us
-
-    const mFactors = factor(m);
-    console.log(mFactors);
-
-    const cFactors = factor(c);
-    console.log(cFactors);
-
-    let isPrime = true;
-    for (const x of mFactors) {
-        console.log(x);
-        if (cFactors.includes(x)) {
-            isPrime = false;
-        }
-    }
-    console.log(
-        isPrime
-            ? "c et m sont premiers entre eux !"
-            : "c et m ne sont pas premiers entre eux !",
-        isPrime
-    );
-
-    // 2) if for all m factors called p, a-1 is multiply of p
-    let isAM1MultiplyP = aM1MultiplyP(mFactors, a);
-
-    console.log(
-        isAM1MultiplyP
-            ? "a-1 est multiple de chaque facteur premier de m "
-            : "a-1 n'est pas multiple de chaque facteur premier de m",
-        isAM1MultiplyP
-    );
-
-    //
-    //  3) if m is multiply of 4 then a-1 is multiple of 4
-    //
-    const isMultiply4 = m % 4 != 0 || (a - 1) % 4 == 0;
-    // if (m % 4 == 0) {
-    //     isMultiply4 = (a - 1) % 4 == 0;
-    // } else {
-    //     isMultiply4 = true;
-    // }
-
-    console.log(
-        isMultiply4
-            ? "m est multiple de 4, alors a-1 est multiple de 4 : "
-            : "m n'est pas multiple de 4",
-        isMultiply4
-    );
-    // a vérifiez pour la formulation je suis pas sur
-
-    //
-    // 4) Conclusion of the Hull-Dobell theorem
-    //
-    if (isPrime && isAM1MultiplyP && isMultiply4) {
-        console.log(
-            `La suite de nombre pseudo-aléatoire est de période maximale = ${m}`
-        );
-    }
-}
+import { verificationThHullDobell } from "./hullDobell.js";
+import { getKhi2 } from "./khi2.js";
 
 function generationSuiteAleatoire(m, a, c, x0) {
     return suiteAleatoire(m, a, c, x0);
@@ -151,14 +56,15 @@ function* genPi() {
     }
 }
 
-function khi2Obs(valeurs, n) {
+function getKhi2Obs(valeurs, n) {
     return valeurs.reduce(
         (a, b) => a + Math.pow(b.ri - n * b.pi, 2) / (n * b.pi),
         0
     );
 }
 
-function testCarréUnite(suiteUns) {
+function testCarréUnite({ suiteUns, alpha = 0.05, saveFile = false }) {
+    if (suiteUns === undefined) throw new Error("suiteUns is undefined");
     const n = Math.floor(suiteUns.length / 4);
     const valeurs = [];
     const pi = genPi();
@@ -187,15 +93,14 @@ function testCarréUnite(suiteUns) {
         while (i >= 0 && valeurs[i].pi * n < 5) {
             valeurs[i].pi += valeurs[i + 1].pi;
             valeurs[i].ri += valeurs[i + 1].ri;
-            delete valeurs[i + 1];
+            valeurs.pop();
             i--;
         }
     }
-
-    console.log(khi2Obs(valeurs, n));
-    valeurs.forEach((v, i) => {
-        console.log((i + 1) / 10, v.ri, v.pi * n);
-    });
+    const dl = valeurs.length - 1;
+    const khi2Obs = getKhi2Obs(valeurs, n);
+    const khi2 = getKhi2(alpha, dl);
+    return khi2Obs < khi2;
 }
 
 const m = 63;
@@ -203,17 +108,19 @@ const a = 22;
 const c = 4;
 const x0 = 19;
 
-verificationThHullDobell(m, a, c, x0);
+console.time("carre");
+try {
+    verificationThHullDobell(m, a, c);
+} catch (e) {
+    console.log(e);
+    process.exit(1);
+}
 
 const suite = generationSuiteAleatoire(m, a, c, x0);
-const suiteUn = Uns(suite, m);
-
-console.log(suite);
-console.log(suiteUn);
-
-// juste pour avoir une liste assez longue pour les tests
-const test = [];
-for (let i = 0; i < 200; i++) {
-    test[i] = Math.random();
+const suiteUns = Uns(suite, m);
+try {
+    testCarréUnite({ suiteUns });
+} catch (e) {
+    console.error(e);
 }
-testCarréUnite(test);
+console.timeEnd("carre");

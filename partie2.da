@@ -1,11 +1,168 @@
-module(nbStationsOptimal;s;d)
----*
-
 Par minute
 1. faire les entrées de client
 2. vérifier la priorité des clients
 3. traiter la file
 4. faire la sortie
 
+Générer les clients prioritaires selon Poisson 0.7
+Générer les clients ordinaires selon Poisson 2
+Parmis les prioritaires:
+ - 30% sont prioritaires absolus
+ - 70% sont prioritaires relatifs
+Une seule file d'attente
+Nouveaux clients placés derrière les précédents qui ont le même statut
+Prioritaire absolu arrive :
+ - Directement en station si libre
+ - Ejecte le client ordinaire en station qui a la plus grande durée de service restante
+   - Ce dernier devient prioritaire absolu et sera placé au début de la file
+Impatience : Si temps d'attente == 10 minutes et pas dans les 3 premiers, il part
+Temps de simulation: 600
 
+Objet Client
+ -> type ("Ordinaire", "Prioritaire relatif", "Prioritaire absolu")
+ -> tempsArrivée
+ -> duréeService
+
+module(nbStationsOptimal;nbStationsMin, nbStationsMax, tempsSimul, alpha, beta;nbStationsOptimal)
+---* nbStationsOptimal
+
+nbStations = nbStationsMin
+
+do while(nbStations <= nbStationsMax)
+    file = 0
+    fileCumulée = 0
+
+    module(initStations;nbStations;stations)
+    temps = 1
+    do while(temps <= tempsSimul)
+        module(afficherStations; stations, nbStations, temps)
+        module(générerArrivées;;nouveauxClients[])
+        // [WARN] Il vient d'où le nbArrivées?
+        file += nbArrivées
+        ind = 1
+
+        do while(ind <= nbStations)
+            // [WARN] stations == duréeService?
+            if(stations[ind] == 0)
+                if(file != 0)
+                    file--
+                    module(générerDurée;;stations[ind])
+                    duréesService[ind]--
+                endif
+            else
+                duréesService[ind]--
+            endif
+            ind++
+        enddo
+
+
+        fileCumulée += file
+        temps++
+    enddo
+
+    couts[nbStations - nbStationsMin] = alpha * nbStations + beta * fileCumulée / tempsSimul
+    nbStations++
+enddo
+
+module(rechercheMin; couts, nbStationsMax - nbStationsMin; nbStationsOptimal)
 ----
+
+module(afficherStations; stations, nbStations, temps)
+---* afficherStations
+iStation = 0
+
+do while(iStation < nbStations)
+    module(afficherStation; stations[iStation], iStation, temps)
+
+    iStation++
+enddo
+----
+
+module(afficherStation;client, iStation, temps;)
+---* afficherStation
+    if(client != null)
+        sortie "Station ", iStation, " - Client ", client.type, " durée service restant: ", client.duréeService - (temps - client.tempsArrivée)
+    else
+        sortie "Station ", iStation, " - vide "
+    endif
+----
+
+module(rechercheMin;couts, nbStations;nbStationsOptimal)
+---* rechercheMin
+iStation = 0
+coutMin = HV
+nbStationsOptimal = -1
+
+do while(iStation < nbStations)
+    if(couts[iStation] < countMin)
+        countMin = couts[iStation]
+        nbStationsOptimal = iStation
+    endif
+
+    iStation++
+enddo
+----
+
+module(initStations;nbStations;stations)
+---*
+stations = nouveau tableau stations de longueur nbStations
+----
+
+module(générerArrivées;;nouveauxClients)
+---*
+nouveauxClients = []
+module(ValeurPoisson;Un, 0.7;nbClientsPrioritaires)
+module(ValeurPoisson;Un, 2;nbClientsOrdinaires)
+// Générer les objets clients ordinaires
+// Générer les objets clients prioritaires | absolus
+nbClientsPrioritairesAbsolus = [nbClientsPrioritaires * 0.3]ENT
+nbClientsPrioritaires = nbClientsPrioritaires - nbClientsPrioritairesAbsolus
+nouveauxClients.append(clientsOrdinaires[])
+nouveauxClients.append(clientsPrioritaires[])
+nouveauxClients.append(clientsPrioritairesAbsolus[])
+----
+
+module(ValeurPoisson;Un, lambda;x)
+---*
+probasCumulées = []
+cumulDesProbas = 0
+x = 0
+do while(cumulDesProbas < 1)
+    cumulDesProbas += (e**-lambda * lamba**x) / x!
+    probasCumulées[x] = cumulDesProbas
+enddo
+
+
+// Générer les probabilités à partir du lambda probas[]
+x = 0
+do while(Un >= probasCumulées[x])
+    x ++
+enddo
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+coucou

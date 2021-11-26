@@ -21,7 +21,7 @@
         "nodemon": "^2.0.15"
     },
     "dependencies": {
-        "chi-squared": "^1.1.0"
+        "yargs": "^17.2.1"
     },
     "type": "module"
 }

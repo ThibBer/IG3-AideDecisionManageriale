@@ -36,21 +36,21 @@ do while(nbStations <= nbStationsMax)
     temps = 1
     do while(temps <= tempsSimul)
         module(afficherStations; stations, nbStations, temps)
-        module(générerArrivées;;nouveauxClients[])
-        // [WARN] Il vient d'où le nbArrivées?
+        module(générerArrivées;;nouveauxClients, nbArrivées)
+        // [WARN] Il vient d'où le nbArrivées? -> du module générerArrivées (oubli)
         file += nbArrivées
         ind = 1
 
         do while(ind <= nbStations)
-            // [WARN] stations == duréeService?
+            // [WARN] stations == duréeService? -> oui
             if(stations[ind] == 0)
                 if(file != 0)
                     file--
                     module(générerDurée;;stations[ind])
-                    duréesService[ind]--
+                    stations[ind]--
                 endif
             else
-                duréesService[ind]--
+                stations[ind]--
             endif
             ind++
         enddo

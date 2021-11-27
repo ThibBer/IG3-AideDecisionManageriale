@@ -31,12 +31,14 @@ nbStations = nbStationsMin
 do while(nbStations <= nbStationsMax)
     file = 0
     fileCumulée = 0
-
     module(initStations;nbStations;stations)
     temps = 1
+    obtenir m, c, a , x0 
+    // pré : les valeurs pour m, c, a et x0 ont été calculées pour maximiser la période
+    module(suiteUn;m,c,a,x0; Un)
     do while(temps <= tempsSimul)
         module(afficherStations; stations, nbStations, temps)
-        module(générerArrivées;;nouveauxClients, nbArrivées)
+        module(générerArrivées; Un; nouveauxClients, nbArrivées)
         // [WARN] Il vient d'où le nbArrivées? -> du module générerArrivées (oubli)
         file += nbArrivées
         ind = 1
@@ -108,7 +110,7 @@ module(initStations;nbStations;stations)
 stations = nouveau tableau stations de longueur nbStations
 ----
 
-module(générerArrivées;;nouveauxClients)
+module(générerArrivées; Un;nouveauxClients)
 ---*
 nouveauxClients = []
 module(ValeurPoisson;Un, 0.7;nbClientsPrioritaires)
@@ -121,6 +123,21 @@ nouveauxClients.append(clientsOrdinaires[])
 nouveauxClients.append(clientsPrioritaires[])
 nouveauxClients.append(clientsPrioritairesAbsolus[])
 ----
+
+module(suiteUn;m,c,a,x0; Un)
+---*
+Xn = [x0]
+i=1
+do while(i < m)
+   x = Xn[i-1]
+   Xn[i].append((a*x+c)%m) 
+enddo
+y = 0
+Un = []
+do while(y < Xn.length)
+   Un.append(Xn[y]/m)
+enddo
+------
 
 module(ValeurPoisson;Un, lambda;x)
 ---*

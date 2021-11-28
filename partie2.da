@@ -74,7 +74,11 @@ do while(nbStations <= nbStationsMax)
     module(suiteUn;m,c,a,x0; Uns) // taille de la suite au moins > tempsSimul
     
     do while(temps <= tempsSimul)
-        module(afficherStations; stations, nbStations, temps)
+        sortie "Affichage des stations en début de minute"
+        module(afficherStations; stations, nbStations)
+
+        sortie "Affichage des clients dans la file avant placement
+        module(afficherFile; file, tailleFile)
         
         module(générerArrivées;Uns[temps - 1];clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
 
@@ -82,6 +86,12 @@ do while(nbStations <= nbStationsMax)
         module(ajoutFile;file, tailleFile, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, ABSOLU;file, tailleFile)
         module(ajoutFile;file, tailleFile, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, RELATIF;file, tailleFile)
         module(ajoutFile;file, tailleFile, ClientsOrdinaires, nbClientsOrdinaires, ORDINAIRE;file, tailleFile)
+
+        sortie "Nombre d'arrivées : ", nbClientsPrioritairesAbsolus + nbClientsPrioritairesRelatifs + nbClientsOrdinaires
+        //TODO Afficher uniquement les nouveaux arrivants
+
+        sortie "Affichage des clients dans la file après placement"
+        module(afficherFile; file, tailleFile)
 
         // Gestion du client absolu qui éjecte un client ordinaire avec la plus grande durée de service
         module(rechercheFinType;file, tailleFile, ABSOLU; nbAbsolus)
@@ -149,18 +159,23 @@ do while(nbStations <= nbStationsMax)
                     nbMinutesSystemeAbsolu++
                 endif
             endif
-            
+
             iClient++
         enddo
 
-        module(ajoutMinutesFiles;)
+        sortie "Affichage des stations en fin de minute"
+        module(afficherStations; stations, nbStations)
+
+        sortie "Affichage des clients dans la file en fin de minute"
+        module(afficherFile; file, tailleFile)
 
         temps++
     enddo
 
     module(coutsNStation;nbMinutesSystemeOrdinaire, nbMinutesSystemeRelatif, nbMinutesSystemeAbsolu, nbMinutesStationPrioritaire, nbMinutesStationOrdinaire, nbPrioritairesPartis, nbOrdinairesPartisn, nbMinutesStationInnocupée;cout)
-    
+
     couts[nbStations - nbStationsMin] = cout
+
     nbStations++
 enddo
 
@@ -191,24 +206,41 @@ module(stationEstVide; station; stationEstVide)
     stationEstVide = station == NULL or station == 0
 ----
 
-module(afficherStations; stations, nbStations, temps)
+module(afficherStations; stations, nbStations)
 ---* afficherStations
 iStation = 0
 
 do while(iStation < nbStations)
-    module(afficherStation; stations[iStation], iStation, temps)
+    module(afficherStation; stations[iStation], iStation)
 
     iStation++
 enddo
 ----
 
-module(afficherStation;client, iStation, temps;)
+module(afficherStation;client, iStation;)
 ---* afficherStation
     if(client != null)
         sortie "Station ", iStation, " - Client ", client.type, " durée service restant: ", client.duréeService
     else
         sortie "Station ", iStation, " - vide "
     endif
+----
+
+module(afficherFile; file, tailleFile;)
+---* afficherFile
+iClientFile = 0
+
+do while (iClientFile < tailleFile)
+    client = file[iClientFile]
+
+    if(client.duréeService != NULL)
+        sortie "[", iClientFile + 1, "] - ", file[iClientFile].type, " | Durée de service: ", client.duréeService
+    else
+        sortie "[", iClientFile + 1, "] - ", file[iClientFile].type
+    endif
+
+    iClientFile++
+enddo
 ----
 
 module(rechercheMin;couts, nbStations;nbStationsOptimal)

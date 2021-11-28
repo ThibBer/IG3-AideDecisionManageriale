@@ -108,9 +108,7 @@ console.time("carre");
 
 try {
     verificationThHullDobell(m, a, c);
-    if (testCarréUnite([...genRandom(m, a, c, x0)])) {
-        oks.push([m, a, c, x0]);
-        console.log(m, a, c, x0);
+    if (testCarréUnite([...genRandom(m, a, c, x0, u(m))])) {
         console.log("OK");
     }
 } catch (e) {

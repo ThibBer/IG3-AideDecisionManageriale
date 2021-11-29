@@ -66,20 +66,22 @@ do while(nbStations <= nbStationsMax)
     nbMinutesStationInnocupée = 0
     nbPrioritairesPartis = 0
     nbOrdinairesPartis = 0
-    
+
     module(initStations;nbStations;stations)
     temps = 1
-    obtenir m, c, a , x0 
+    obtenir m, c, a , x0
     // pré : les valeurs pour m, c, a et x0 ont été calculées pour maximiser la période
     module(suiteUn;m,c,a,x0; Uns) // taille de la suite au moins > tempsSimul
-    
-    do while(temps <= tempsSimul)
-        sortie "Affichage des stations en début de minute"
-        module(afficherStations; stations, nbStations)
 
-        sortie "Affichage des clients dans la file avant placement
-        module(afficherFile; file, tailleFile)
-        
+    do while(temps <= tempsSimul)
+        if (temps <= 20)
+            sortie "Affichage des stations en début de minute"
+            module(afficherStations; stations, nbStations)
+
+            sortie "Affichage des clients dans la file avant placement
+            module(afficherFile; file, tailleFile)
+        endif
+
         module(générerArrivées;Uns[temps - 1];clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
 
         // Ajout des nouveaux clients dans la file
@@ -87,11 +89,15 @@ do while(nbStations <= nbStationsMax)
         module(ajoutFile;file, tailleFile, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, RELATIF;file, tailleFile)
         module(ajoutFile;file, tailleFile, ClientsOrdinaires, nbClientsOrdinaires, ORDINAIRE;file, tailleFile)
 
-        sortie "Nombre d'arrivées : ", nbClientsPrioritairesAbsolus + nbClientsPrioritairesRelatifs + nbClientsOrdinaires
-        //TODO Afficher uniquement les nouveaux arrivants
+        if (temps <= 20)
+            sortie "Nombre d'arrivées : ", nbClientsPrioritairesAbsolus + nbClientsPrioritairesRelatifs + nbClientsOrdinaires
+            module(afficherFile; clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus)
+            module(afficherFile; clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs)
+            module(afficherFile; ClientsOrdinaires, nbClientsOrdinaires)
 
-        sortie "Affichage des clients dans la file après placement"
-        module(afficherFile; file, tailleFile)
+            sortie "Affichage des clients dans la file après placement"
+            module(afficherFile; file, tailleFile)
+        endif
 
         // Gestion du client absolu qui éjecte un client ordinaire avec la plus grande durée de service
         module(rechercheFinType;file, tailleFile, ABSOLU; nbAbsolus)
@@ -99,16 +105,16 @@ do while(nbStations <= nbStationsMax)
         nbExclus = 0
         do while(iStation > -1 && nbExclus < nbAbsolus)
             // tabElementsSupprimes = array.splice(début, nbASupprimer[, élem1[, élem2[, ...]]])
-            client = file.splice(nbExclus, 1)[0] 
+            client = file.splice(nbExclus, 1)[0]
             ancienClient = station[iStation]
             ancienClient.type = ABSOLU
             station[iStation] = client
             file.unshift(ancienClient) //Ajoute au début de la file
             nbExclus++
-            
+
             module(indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale;stations,nbStations;iStation)
         enddo
-        
+
         // Place les clients de la file d'attente dans une station vide et décrémente le temps service
         iStation = 0
         do while(iStation < nbStations)
@@ -163,12 +169,13 @@ do while(nbStations <= nbStationsMax)
             iClient++
         enddo
 
-        sortie "Affichage des stations en fin de minute"
-        module(afficherStations; stations, nbStations)
+        if (temps <= 20)
+            sortie "Affichage des stations en fin de minute"
+            module(afficherStations; stations, nbStations)
 
-        sortie "Affichage des clients dans la file en fin de minute"
-        module(afficherFile; file, tailleFile)
-
+            sortie "Affichage des clients dans la file en fin de minute"
+            module(afficherFile; file, tailleFile)
+        endif
         temps++
     enddo
 
@@ -290,10 +297,10 @@ module(générerClients; nbClients, type, temps; clients)
 
         client.type = type
         client.tempsArrivée = temps
-    
+
         module(générerDuréeService;;duréeService)
         client.duréeService = duréeService
-        
+
         clients.push(client)
     enddo
 ----
@@ -316,7 +323,7 @@ if (type != ORIDINAIRE )
     do while(indice < tailleFile && file[indice].type >= type)
         indice++
     enddo
-else 
+else
     indice = tailleFile
 endif
 ----

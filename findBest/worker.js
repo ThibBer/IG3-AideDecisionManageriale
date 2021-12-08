@@ -1,22 +1,24 @@
 import { parentPort, workerData } from "worker_threads";
 import { verificationThHullDobell } from "../hullDobell.js";
-import { genRandom, testCarréUnite } from "../partie1func.js";
+import { genRandom, testCarréUniteGen } from "../partie1func.js";
 const start = workerData.start;
 const end = workerData.end;
 
 let oks = [];
-for (let m = start; m < end; m++) {
-    for (let a = start; a < end; a++) {
-        for (let c = start; c < end; c++) {
-            for (let x0 = start; x0 < end; x0++) {
-                try {
-                    verificationThHullDobell(m, a, c);
-                    if (testCarréUnite([...genRandom(m, a, c, x0)])) {
+for (let m = 500 + start; m < 500 + end; m++) {
+    for (let a = 0; a < 1000; a++) {
+        for (let c = 0; c < 1000; c++) {
+            try {
+                verificationThHullDobell(m, a, c);
+                for (let x0 = 0; x0 < 1000; x0++) {
+                    if (
+                        testCarréUniteGen({ suiteUns: genRandom(m, a, c, x0) })
+                    ) {
                         oks.push([m, a, c, x0]);
                     }
-                } catch (error) {
-                    continue;
                 }
+            } catch (error) {
+                continue;
             }
         }
     }

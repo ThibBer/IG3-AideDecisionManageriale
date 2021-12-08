@@ -1,3 +1,4 @@
+import fs from "fs";
 import os from "os";
 import path from "path";
 import { Worker } from "worker_threads";
@@ -25,7 +26,7 @@ const workers = [];
 const iterPerWorker = Math.floor(MAX_ITER / totalCpus);
 for (let i = 0; i < totalCpus; i++) {
     const start = iterPerWorker * i + 1;
-    const end = Math.min(start + iterPerWorker, 1000);
+    const end = Math.min(start + iterPerWorker, MAX_ITER);
     workers.push(runWorker({ start, end }));
 }
 

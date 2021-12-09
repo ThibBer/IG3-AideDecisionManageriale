@@ -62,7 +62,7 @@ function getKhi2Obs(valeurs, n) {
 function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
     if (suiteUns === undefined) throw new Error("suiteUns is undefined");
     let n = 0;
-    [
+    const valeurs = [
         { ri: 0, pi: 0.23483186108782253 },
         { ri: 0, pi: 0.17497275203015852 },
         { ri: 0, pi: 0.13949513695482413 },
@@ -97,14 +97,19 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
         const y1 = suiteUns.next().value;
         const x2 = suiteUns.next().value;
         const y2 = suiteUns.next().value;
-        if (x1 && y1 && x2 && y2) {
-            const distance = distanceCarre(x1, y1, x2, y2);
-            const val = Math.floor(distance * 10);
-            valeurs[val].ri += 1;
-            n++;
-        } else {
+        if (
+            x1 === undefined ||
+            y1 === undefined ||
+            x2 === undefined ||
+            y2 === undefined
+        ) {
             break;
         }
+        const distance = distanceCarre(x1, y1, x2, y2);
+        const val = Math.floor(distance * 10);
+
+        valeurs[val].ri += 1;
+        n++;
     }
 
     //! Ici, on commence par le bas et on remonte en additionnant tant qu'on a pas npi > 5
@@ -181,4 +186,4 @@ function testCarréUnite({ suiteUns, alpha = 0.05, saveFile = false }) {
 // }
 // console.timeEnd("carre");
 
-export { testCarréUnite, testCarréUniteGen, genRandom };
+export { testCarréUnite, testCarréUniteGen, genRandom, u, y };

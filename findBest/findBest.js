@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from "os";
 import { Worker } from "worker_threads";
 
 const totalCpus = os.cpus().length;
@@ -24,7 +25,7 @@ const iterPerWorker = Math.floor((MAX_ITER - START_ITER) / totalCpus);
 for (let i = 0; i < totalCpus; i++) {
     const start = START_ITER + iterPerWorker * i + 1;
     const end = Math.min(start + iterPerWorker, MAX_ITER);
-    workers.push(runWorker({ start, end, max: MAX_ITER }));
+    workers.push(runWorker({ start, end }));
 }
 
 console.time("findbest");

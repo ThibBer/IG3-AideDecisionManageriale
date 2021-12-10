@@ -21,7 +21,6 @@
         "nodemon": "^2.0.15"
     },
     "dependencies": {
-        "gpu.js": "^2.11.4",
         "yargs": "^17.2.1"
     },
     "type": "module"

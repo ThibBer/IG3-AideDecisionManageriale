@@ -1,16 +1,3 @@
-function memoizer(fun) {
-    let cache = {};
-    return function (n) {
-        if (cache[n] != undefined) {
-            return cache[n];
-        } else {
-            let result = fun(n);
-            cache[n] = result;
-            return result;
-        }
-    };
-}
-
 // src: https://www.cuemath.com/numbers/coprime-numbers/
 function areCoPrime(a, b) {
     if (Math.abs(a - b) === 1) return true;

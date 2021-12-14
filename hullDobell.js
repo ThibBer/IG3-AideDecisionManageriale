@@ -1,34 +1,36 @@
-function factors(m) {
-    let i = 2;
-    const factors = new Set(); // set() supprime les doublons en python
-
-    while (i * i <= m) {
-        if (m % i) {
-            i++;
-        } else {
-            m /= i;
-            factors.add(i);
-        }
-    }
-
-    if (m > 1) {
-        factors.add(m);
-    }
-
-    return Array.from(factors);
+// src: https://www.cuemath.com/numbers/coprime-numbers/
+function areCoPrime(a, b) {
+    if (Math.abs(a - b) === 1) return true;
+    if (a % 2 === 0 && b % 2 === 0) return false;
+    if (a < b) return hcf(a, b) === 1;
+    return hcf(b, a) === 1;
 }
 
-function aM1MultiplyP(list, a) {
-    let isAM1MultiplyP;
-    for (const p of list) {
-        if ((a - 1) % p == 0) {
-            isAM1MultiplyP = true;
+// src: https://www.cuemath.com/numbers/hcf-highest-common-factor/
+// pre-condition: a < b
+function hcf(a, b) {
+    if (a === 0) return b;
+    return hcf(b % a, a);
+}
+
+function primeFactors(n) {
+    let i = 2;
+    const allFactors = new Set();
+
+    while (i ** 2 <= n) {
+        if (n % i) {
+            i++;
         } else {
-            return false;
+            n /= i;
+            allFactors.add(i);
         }
     }
 
-    return isAM1MultiplyP;
+    if (n > 1) {
+        allFactors.add(n);
+    }
+    const factors = [...allFactors];
+    return factors;
 }
 
 function verificationThHullDobell(m, a, c) {
@@ -36,21 +38,16 @@ function verificationThHullDobell(m, a, c) {
 
     // to know if the period will be m long or less
 
-    // 1) if c and m are prime between us
-
-    const mFactors = factors(m);
-    const cFactors = factors(c);
-
-    const isPrime = !mFactors.some((mf) => cFactors.includes(mf));
-    if (!isPrime) throw new Error("c and m are not prime between them");
-
-    const isAM1MultiplyP = aM1MultiplyP(mFactors, a);
-    if (!isAM1MultiplyP) throw new Error("a - 1 is not a multiple of p");
-
+    // m and c are relatively prime,
+    if (!areCoPrime(c, m)) return false;
+    const mPrimeFactors = primeFactors(m);
+    // a-1 is divisible by all prime factors of m,
+    if (!mPrimeFactors.every((p) => (a - 1) % p === 0)) return false;
+    // a - 1 is divisible by 4 if m is divisible by 4.
     const isMultiply4 = m % 4 != 0 || (a - 1) % 4 == 0;
-    if (!isMultiply4) throw new Error("m is  multiple of 4 but a - 1 is not.");
+    if (!isMultiply4) return false;
 
-    return isPrime && isAM1MultiplyP && isMultiply4;
+    return true;
 }
 
 export { verificationThHullDobell };

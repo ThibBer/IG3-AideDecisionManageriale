@@ -1,12 +1,9 @@
-import fs from "fs";
 import os from "os";
-import path from "path";
 import { Worker } from "worker_threads";
-const __dirname = path.resolve(path.dirname(""));
-console.log("__dirname :>> ", __dirname);
 
 const totalCpus = os.cpus().length;
-const MAX_ITER = 1000;
+const START_ITER = 500;
+const MAX_ITER = 4200;
 
 function runWorker(workerData) {
     return new Promise((resolve, reject) => {
@@ -23,14 +20,14 @@ function runWorker(workerData) {
     });
 }
 const workers = [];
-const iterPerWorker = Math.floor(MAX_ITER / totalCpus);
+const iterPerWorker = Math.ceil((MAX_ITER - START_ITER) / totalCpus);
 for (let i = 0; i < totalCpus; i++) {
-    const start = iterPerWorker * i + 1;
-    const end = Math.min(start + iterPerWorker, MAX_ITER);
+    const start = START_ITER + iterPerWorker * i;
+    const end = Math.min(start + iterPerWorker - 1, MAX_ITER);
     workers.push(runWorker({ start, end }));
 }
 
+console.time("findbest");
 Promise.all(workers).then((results) => {
-    const oks = results.reduce((acc, val) => acc.concat(val.oks), []);
-    fs.writeFileSync("ok.json", JSON.stringify(oks));
+    console.timeEnd("findbest");
 });

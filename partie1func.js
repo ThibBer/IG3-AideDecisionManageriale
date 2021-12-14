@@ -21,8 +21,8 @@ function* genRandom(m, a, c, x0, method = (x) => x) {
 }
 
 /*Calcul la distance entre les points*/
-function distanceCarre(xn, xn1, xn2, xn3) {
-    return Math.pow(xn3 - xn1, 2) + Math.pow(xn2 - xn, 2);
+function distanceCarre(x1, y1, x2, y2) {
+    return Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2);
 }
 
 function F(x) {
@@ -62,6 +62,28 @@ function getKhi2Obs(valeurs, n) {
 function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
     if (suiteUns === undefined) throw new Error("suiteUns is undefined");
     let n = 0;
+    // const valeurs = [
+    //     { ri: 0, pi: 0.23483186108782253 },
+    //     { ri: 0, pi: 0.17497275203015852 },
+    //     { ri: 0, pi: 0.13949513695482413 },
+    //     { ri: 0, pi: 0.11271807719385785 },
+    //     { ri: 0, pi: 0.09096945794617028 },
+    //     { ri: 0, pi: 0.07261363615466931 },
+    //     { ri: 0, pi: 0.05674855328174522 },
+    //     { ri: 0, pi: 0.04281330742276601 },
+    //     { ri: 0, pi: 0.03043069083756711 },
+    //     { ri: 0, pi: 0.019332514013545632 },
+    //     { ri: 0, pi: 0.010777309350941788 },
+    //     { ri: 0, pi: 0.006344711603793574 },
+    //     { ri: 0, pi: 0.003740382167142009 },
+    //     { ri: 0, pi: 0.002137228998475127 },
+    //     { ri: 0, pi: 0.001154608980475036 },
+    //     { ri: 0, pi: 0.000571269516336681 },
+    //     { ri: 0, pi: 0.00024597989021035715 },
+    //     { ri: 0, pi: 0.0000836123297860425 },
+    //     { ri: 0, pi: 0.000017802490300589113 },
+    //     { ri: 0, pi: 0.0000011077494113109765 },
+    // ];
     const valeurs = [];
     const pi = genPi();
     for (let x = 0; x < 20; x += 1) {
@@ -70,15 +92,22 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
             pi: pi.next().value,
         };
     }
-
     for (let Un of suiteUns) {
-        const distance = distanceCarre(
-            Un,
-            suiteUns.next().value,
-            suiteUns.next().value,
-            suiteUns.next().value
-        );
+        const x1 = Un;
+        const y1 = suiteUns.next().value;
+        const x2 = suiteUns.next().value;
+        const y2 = suiteUns.next().value;
+        if (
+            x1 === undefined ||
+            y1 === undefined ||
+            x2 === undefined ||
+            y2 === undefined
+        ) {
+            break;
+        }
+        const distance = distanceCarre(x1, y1, x2, y2);
         const val = Math.floor(distance * 10);
+
         valeurs[val].ri += 1;
         n++;
     }
@@ -157,4 +186,4 @@ function testCarréUnite({ suiteUns, alpha = 0.05, saveFile = false }) {
 // }
 // console.timeEnd("carre");
 
-export { testCarréUnite, testCarréUniteGen, genRandom };
+export { testCarréUnite, testCarréUniteGen, genRandom, u, y };

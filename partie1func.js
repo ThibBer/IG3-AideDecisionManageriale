@@ -1,4 +1,5 @@
 import { getKhi2 } from "./khi2.js";
+import { setKhi, setTable } from "./saveFile.js";
 
 function formuleCongruentielleLinéaireMixte(m, a, c, xn) {
     return (a * xn + c) % m;
@@ -111,7 +112,9 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
         valeurs[val].ri += 1;
         n++;
     }
-
+    if (saveFile) {
+        setTable("before", valeurs, n);
+    }
     //! Ici, on commence par le bas et on remonte en additionnant tant qu'on a pas npi > 5
     for (let i = valeurs.length - 2; i >= 0; i--) {
         while (i >= 0 && valeurs[i].pi * n < 5) {
@@ -121,10 +124,17 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
             i--;
         }
     }
+    if (saveFile) {
+        setTable("after", valeurs, n);
+    }
+
     const dl = valeurs.length - 1;
     if (dl < 1) return false;
     const khi2Obs = getKhi2Obs(valeurs, n);
     const khi2 = getKhi2(alpha, dl);
+    if (saveFile) {
+        setKhi(khi2Obs, khi2);
+    }
     return khi2Obs < khi2;
 }
 

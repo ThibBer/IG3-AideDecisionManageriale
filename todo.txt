@@ -1,0 +1,7 @@
+HIGH:
+    - Ecrire la partie 2
+    - Générer fichiers avec toutes les infos (pas forcément besoin en console)
+MEDIUM:
+
+LOW:
+    - afficher les liges du test carré unité sur un graph

@@ -6,9 +6,12 @@ const start = workerData.start;
 const end = workerData.end;
 
 let oks = [];
-const stream = fs.createWriteStream(`findBest/result-${start}-${end}.txt`, {
-    flags: "a",
-});
+const stream = fs.createWriteStream(
+    `findBest/results/result-${start}-${end}.txt`,
+    {
+        flags: "a",
+    }
+);
 stream.write("m, a, c, x0\n");
 for (let m = start; m < end; m++) {
     for (let a = 0; a < m; a++) {

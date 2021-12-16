@@ -1,4 +1,5 @@
 HIGH:
+    - check changement de type quand exclu de stations
     - Ecrire la partie 2
     - Générer fichiers avec toutes les infos (pas forcément besoin en console)
 MEDIUM:

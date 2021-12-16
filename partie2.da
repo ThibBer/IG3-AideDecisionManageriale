@@ -82,7 +82,7 @@ do while(nbStations <= nbStationsMax)
             module(afficherFile; file, tailleFile)
         endif
 
-        module(générerArrivées;Uns[temps - 1];clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
+        module(générerArrivées;Uns[temps - 1], temps;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
 
         // Ajout des nouveaux clients dans la file
         module(ajoutFile;file, tailleFile, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, ABSOLU;file, tailleFile)
@@ -103,10 +103,10 @@ do while(nbStations <= nbStationsMax)
         module(rechercheFinType;file, tailleFile, ABSOLU; nbAbsolus)
         module(indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale;stations,nbStations;iStation)
         nbExclus = 0
-        do while(iStation > -1 && nbExclus < nbAbsolus)
+        do while(nbExclus < nbAbsolus && iStation > -1)
             // tabElementsSupprimes = array.splice(début, nbASupprimer[, élem1[, élem2[, ...]]])
             client = file.splice(nbExclus, 1)[0]
-            ancienClient = station[iStation]
+            ancienClient = stations[iStation]
             ancienClient.type = ABSOLU
             station[iStation] = client
             file.unshift(ancienClient) //Ajoute au début de la file
@@ -271,9 +271,8 @@ module(initStations;nbStations;stations)
 stations = nouveau tableau stations de longueur nbStations
 ----
 
-module(générerArrivées;Un;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbclientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
+module(générerArrivées;Un, temps;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbclientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
 ---* générerArrivées
-nouveauxClients = []
 module(valeurPoisson;Un, POISSON_CLIENTS_PRIORITAIRES;nbClientsPrioritaires)
 module(valeurPoisson;Un, POISSON_CLIENTS_ORDINAIRES;nbClientsOrdinaires)
 
@@ -353,8 +352,8 @@ cout += nbMinutesSystemeRelatif / 60 * COUTS_HORAIRE_SYSTEME.PRIORITAIRE_RELATIF
 cout += nbMinutesSystemeAbsolu / 60 * COUTS_HORAIRE_SYSTEME.PRIORITAIRE_ABSOLU
 // station prioritaire
 cout += nbMinutesStationPrioritaire / 60 * COUTS_HORAIRE_OCCUPATION.PRIORITAIRE
-// station ordinqire
-cout += nbMinutesStationPrioritaire / 60 * COUTS_HORAIRE_OCCUPATION.ORDINAIRE
+// station ordinaire
+cout += nbMinutesStationOrdinaire / 60 * COUTS_HORAIRE_OCCUPATION.ORDINAIRE
 // inoccupation stations
 cout += nbMinutesStationInnocupée / 60 * COUT_HORAIRE_INNOCUPATION
 // perte d'un client prioritaire

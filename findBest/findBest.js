@@ -2,8 +2,8 @@ import os from "os";
 import { Worker } from "worker_threads";
 
 const totalCpus = os.cpus().length;
-const START_ITER = 500;
-const MAX_ITER = 4200;
+const START_ITER = 4201;
+const MAX_ITER = 10000;
 
 function runWorker(workerData) {
     return new Promise((resolve, reject) => {

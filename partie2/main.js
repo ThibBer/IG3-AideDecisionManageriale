@@ -12,8 +12,6 @@ import {
     TYPE_CLIENT,
 } from "./constant.js";
 
-const types = ["Ordinaire", "Relatif", "Absolu"];
-
 const m = 4000,
     a = 21,
     c = 713,
@@ -22,7 +20,7 @@ const m = 4000,
 const logger = winston.createLogger({
     level: "debug",
     format: winston.format.simple(),
-    transports: [new winston.transports.File({ filename: "sortie.log" }), new winston.transports.Console()],
+    transports: [new winston.transports.Console()],
 });
 
 function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
@@ -76,13 +74,13 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
             }
 
             // Gestion du client absolu qui éjecte un client ordinaire avec la plus grande durée de service
-            const iStationVide = getStationVide(stations);
+            let iStationVide = getStationVide(stations);
+            if (iStationVide === -1) {
+                iStationVide = indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale(stations);
+            }
             const nbAbsolus = rechercheFinType(file, TYPE_CLIENT.ABSOLU);
             let nbExclus = 0;
-            while (
-                nbExclus < nbAbsolus &&
-                indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale(stations) > -1
-            ) {
+            while (nbExclus < nbAbsolus && iStationVide > -1) {
                 const client = file.splice(nbExclus, 1)[0];
                 const ancienClient = stations[iStationVide];
                 ancienClient.type = TYPE_CLIENT.ABSOLU;
@@ -211,7 +209,7 @@ function afficherStations(stations) {
 
 function afficherStation(client, iStation) {
     if (client !== undefined) {
-        logger.info(`Station ${iStation} - Client ${types[client.type]} durée de service restant : ${client.duréeService}`);
+        logger.info(`Station ${iStation} - Client ${client.typeString} durée de service restant : ${client.duréeService}`);
     } else {
         logger.info(`Station ${iStation} - vide`);
     }
@@ -222,27 +220,27 @@ function afficherFile(file) {
         const client = file[iClient];
 
         if (client.duréeService === undefined) {
-            logger.info(`[${iClient + 1}] - ${types[client.type]} | Durée de service: ${client.duréeService}`);
+            logger.info(`[${iClient + 1}] - ${client.typeString} | Durée de service: ${client.duréeService}`);
         } else {
-            logger.info(`[${iClient + 1}] - ${types[client.type]}`);
+            logger.info(`[${iClient + 1}] - ${client.typeString}`);
         }
     }
 }
 
 function rechercheMin(couts) {
     let iStation = 0;
-    let countMin = Number.MAX_SAFE_INTEGER;
-    let iStationsOptimale = -1;
+    let coutMin = Number.MAX_SAFE_INTEGER;
+    let iStationOptimale = -1;
 
     while (iStation < couts.length) {
         const coutsStation = coutsNStation(
-            couts[iStation].coutDuSysteme,
-            couts[iStation].coutDeStation,
-            couts[iStation].coutDeInnocupationStations,
-            couts[iStation].coutDePerteClients
+            couts[iStation].systeme,
+            couts[iStation].station,
+            couts[iStation].innocupationStations,
+            couts[iStation].perteClients
         );
 
-        if (coutsStation < countMin) {
+        if (coutsStation < coutMin) {
             coutMin = coutsStation;
             iStationOptimale = iStation;
         }
@@ -250,7 +248,7 @@ function rechercheMin(couts) {
         iStation++;
     }
 
-    return iStationsOptimale;
+    return iStationOptimale + 1;
 }
 
 function générerArrivées(Uns, temps) {
@@ -365,4 +363,4 @@ function coutPerteClients(nbPrioritairesPartis, nbOrdinairesPartis) {
     return (nbPrioritairesPartis / 60) * PERTE.PRIORITAIRE + (nbOrdinairesPartis / 60) * PERTE.ORDINAIRE;
 }
 
-nbStationsOptimal(3, 4, 100);
+nbStationsOptimal(2, 10, 600);

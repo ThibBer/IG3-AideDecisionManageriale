@@ -54,10 +54,7 @@ function* genPi() {
 }
 
 function getKhi2Obs(valeurs, n) {
-    return valeurs.reduce(
-        (a, b) => a + Math.pow(b.ri - n * b.pi, 2) / (n * b.pi),
-        0
-    );
+    return valeurs.reduce((a, b) => a + Math.pow(b.ri - n * b.pi, 2) / (n * b.pi), 0);
 }
 
 function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
@@ -98,12 +95,7 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
         const y1 = suiteUns.next().value;
         const x2 = suiteUns.next().value;
         const y2 = suiteUns.next().value;
-        if (
-            x1 === undefined ||
-            y1 === undefined ||
-            x2 === undefined ||
-            y2 === undefined
-        ) {
+        if (x1 === undefined || y1 === undefined || x2 === undefined || y2 === undefined) {
             break;
         }
         const distance = distanceCarre(x1, y1, x2, y2);
@@ -151,12 +143,7 @@ function testCarréUnite({ suiteUns, alpha = 0.05, saveFile = false }) {
     }
 
     for (let n = 0; n <= suiteUns.length - 4; n += 4) {
-        const distance = distanceCarre(
-            suiteUns[n],
-            suiteUns[n + 1],
-            suiteUns[n + 2],
-            suiteUns[n + 3]
-        );
+        const distance = distanceCarre(suiteUns[n], suiteUns[n + 1], suiteUns[n + 2], suiteUns[n + 3]);
 
         const val = Math.floor(distance * 10);
         valeurs[val].ri += 1;

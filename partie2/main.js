@@ -8,20 +8,31 @@ import {
     PERTE,
     POISSON_CLIENTS_ORDINAIRES,
     POISSON_CLIENTS_PRIORITAIRES,
+    POISSON_DUREE_SERVICES,
     PROPORTION_ABSOLU,
     TYPE_CLIENT,
 } from "./constant.js";
 
-const m = 4000,
-    a = 21,
-    c = 713,
+// const m = 4000,
+//     a = 21,
+//     c = 713,
+//     x0 = 1;
+const m = 3625,
+    a = 146,
+    c = 112,
     x0 = 1;
+// const m = 6000,
+//     a = 361,
+//     c = 1243,
+//     x0 = 1;
 
 const logger = winston.createLogger({
     level: "debug",
     format: winston.format.simple(),
-    transports: [new winston.transports.Console()],
+    transports: [new winston.transports.Console(), new winston.transports.File({ filename: "sortie.log" })],
 });
+
+const repetDS = new Array(10).fill(0);
 
 function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
     // autant la faire en dernier pour pourvoir tester petit à petit
@@ -47,10 +58,10 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
         while (temps <= tempsSimulation) {
             if (temps <= 20) {
                 logger.info("===============TEMPS DE SIMULATION : " + temps + "================");
-                logger.info("Affichage des stations en début de minute");
+                logger.info("---Affichage des stations en début de minute:");
                 afficherStations(stations);
 
-                logger.info("Affichage des clients dans la file avant placement");
+                logger.info("---Affichage des clients dans la file avant placement:");
                 afficherFile(file);
             }
 
@@ -61,15 +72,18 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
 
             if (temps <= 20) {
                 logger.info(
-                    "Nombre d'arrivées " +
+                    "Nombre d'arrivées: " +
                         (clientsOrdinaires.length + clientsPrioritairesRelatifs.length + clientsOrdinaires.length)
                 );
 
-                afficherFile(clientsPrioritairesAbsolus);
-                afficherFile(clientsPrioritairesRelatifs);
+                logger.info("Ordinaires: " + clientsOrdinaires.length);
                 afficherFile(clientsOrdinaires);
+                logger.info("Prioritaires relatifs: " + clientsPrioritairesRelatifs.length);
+                afficherFile(clientsPrioritairesRelatifs);
+                logger.info("Prioritaires absolus: " + clientsPrioritairesAbsolus.length);
+                afficherFile(clientsPrioritairesAbsolus);
 
-                logger.info("Affichage des clients dans la file après placement");
+                logger.info("---Affichage des clients dans la file après placement:");
                 afficherFile(file);
             }
 
@@ -83,10 +97,13 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
             while (nbExclus < nbAbsolus && iStationVide > -1) {
                 const client = file.splice(nbExclus, 1)[0];
                 const ancienClient = stations[iStationVide];
-                ancienClient.type = TYPE_CLIENT.ABSOLU;
+                if (ancienClient !== undefined && ancienClient.duréeService > 0) {
+                    ancienClient.type = TYPE_CLIENT.ABSOLU;
+                    file.unshift(ancienClient);
+                }
                 stations[iStationVide] = client;
-                file.unshift(ancienClient);
                 nbExclus++;
+                iStationVide = indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale(stations);
             }
 
             let iStation = 0;
@@ -159,9 +176,9 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
         nbStations++;
     }
 
-    afficherCoutsStations(couts);
+    afficherCoutsStations(couts, nbStationMin);
 
-    const nbStationsOptimalTrouvees = rechercheMin(couts);
+    const nbStationsOptimalTrouvees = rechercheMin(couts) + nbStationMin;
     logger.info("Nombre de stations optimale: " + nbStationsOptimalTrouvees);
 }
 
@@ -186,30 +203,45 @@ function indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale
 }
 
 function getStationVide(stations) {
-    return stations.indexOf(undefined);
+    for (const index in stations) {
+        if (stationEstVide(stations[index])) {
+            return parseInt(index);
+        }
+    }
+    return -1;
 }
 
 function stationEstVide(station) {
-    return station === undefined || station.duréeService == 0;
+    return station === undefined || station.duréeService === 0;
 }
 
-function afficherCoutsStations(couts) {
-    for (const iCout in couts) {
+function afficherCoutsStations(couts, nbStationMin) {
+    couts.forEach((cout, i) => {
         logger.info(
-            `${iCout} station(s) ouvertes -> Cout du système: ${couts[iCout].systeme} | Cout stations: ${couts[iCout].station} | Cout innocupation du système: ${couts[iCout].innocupationStations} | Cout de perte de clients: ${couts[iCout].perteClients}`
+            `${i + nbStationMin} station(s) ouvertes -> Cout du système: ${cout.systeme.toFixed(
+                2
+            )} | Cout stations: ${cout.station.toFixed(2)} | Cout innocupation du système: ${cout.innocupationStations.toFixed(
+                2
+            )} | Cout de perte de clients: ${cout.perteClients.toFixed(2)} \n\t Cout total: ${coutNStations(cout).toFixed(2)}`
         );
-    }
+    });
 }
 
 function afficherStations(stations) {
-    for (const iStation in stations) {
-        afficherStation(stations[iStation], iStation);
+    if (stations.length === 0) {
+        logger.info("Aucune station occupée");
+    } else {
+        for (const iStation in stations) {
+            afficherStation(stations[iStation], iStation);
+        }
     }
 }
 
 function afficherStation(client, iStation) {
     if (client !== undefined) {
-        logger.info(`Station ${iStation} - Client ${client.typeString} durée de service restant : ${client.duréeService}`);
+        logger.info(
+            `Station ${iStation} - Client ${client.typeString} (${client.id}) durée de service restant : ${client.duréeService}`
+        );
     } else {
         logger.info(`Station ${iStation} - vide`);
     }
@@ -219,8 +251,8 @@ function afficherFile(file) {
     for (let iClient = 0; iClient < file.length; iClient++) {
         const client = file[iClient];
 
-        if (client.duréeService === undefined) {
-            logger.info(`[${iClient + 1}] - ${client.typeString} | Durée de service: ${client.duréeService}`);
+        if (client.duréeService !== undefined) {
+            logger.info(`[${iClient + 1}] - ${client.typeString} (${client.id}) | Durée de service: ${client.duréeService}`);
         } else {
             logger.info(`[${iClient + 1}] - ${client.typeString}`);
         }
@@ -233,12 +265,7 @@ function rechercheMin(couts) {
     let iStationOptimale = -1;
 
     while (iStation < couts.length) {
-        const coutsStation = coutsNStation(
-            couts[iStation].systeme,
-            couts[iStation].station,
-            couts[iStation].innocupationStations,
-            couts[iStation].perteClients
-        );
+        const coutsStation = coutNStations(couts[iStation]);
 
         if (coutsStation < coutMin) {
             coutMin = coutsStation;
@@ -248,7 +275,7 @@ function rechercheMin(couts) {
         iStation++;
     }
 
-    return iStationOptimale + 1;
+    return iStationOptimale;
 }
 
 function générerArrivées(Uns, temps) {
@@ -274,21 +301,25 @@ function générerArrivées(Uns, temps) {
 //     return clients;
 // }
 
-function duréeServiceGénérée() {
-    // on génère comment les durées de service?
-    return 10;
-}
-
-function clientPrioritaire(temps, u) {
-    if (u < PROPORTION_ABSOLU) {
-        return new Client(TYPE_CLIENT.ABSOLU, duréeServiceGénérée(), temps);
-    } else {
-        return new Client(TYPE_CLIENT.RELATIF, duréeServiceGénérée(), temps);
+function duréeServiceGénérée(lambda, Uns) {
+    const L = Math.exp(-lambda);
+    let p = 1;
+    let x = 0;
+    while (p > L) {
+        const u = Uns.next().value;
+        p *= u;
+        x++;
     }
+    return x;
 }
 
-function clientOrdinaire(temps) {
-    return new Client(TYPE_CLIENT.ORDINAIRE, duréeServiceGénérée(), temps);
+function clientPrioritaire(temps, duréeService, u) {
+    const type = u <= PROPORTION_ABSOLU ? TYPE_CLIENT.ABSOLU : TYPE_CLIENT.RELATIF;
+    return new Client(type, duréeService, temps);
+}
+
+function clientOrdinaire(temps, duréeService) {
+    return new Client(TYPE_CLIENT.ORDINAIRE, duréeService, temps);
 }
 
 // https://en.wikipedia.org/wiki/Poisson_distribution#Generating_Poisson-distributed_random_variables
@@ -298,7 +329,9 @@ function générerClients(lambda, temps, Uns, type) {
     let p = 1;
     while (p > L) {
         const u = Uns.next().value;
-        clients.push(type(temps, u));
+        const duréeService = duréeServiceGénérée(POISSON_DUREE_SERVICES, Uns);
+        repetDS[duréeService]++;
+        clients.push(type(temps, duréeService, u));
         p *= u;
     }
     return clients;
@@ -338,8 +371,8 @@ function ajoutFile(file, clients, type) {
     return file;
 }
 
-function coutsNStation(coutSysteme, coutStations, coutInnocupationStations, coutPerteClients) {
-    return coutSysteme + coutStations + coutInnocupationStations + coutPerteClients;
+function coutNStations(cout) {
+    return cout.systeme + cout.station + cout.innocupationStations + cout.perteClients;
 }
 
 function coutSysteme(nbMinutesSystemeOrdinaire, nbMinutesSystemeRelatif, nbMinutesSystemeAbsolu) {
@@ -363,4 +396,4 @@ function coutPerteClients(nbPrioritairesPartis, nbOrdinairesPartis) {
     return (nbPrioritairesPartis / 60) * PERTE.PRIORITAIRE + (nbOrdinairesPartis / 60) * PERTE.ORDINAIRE;
 }
 
-nbStationsOptimal(2, 10, 600);
+nbStationsOptimal(6, 10, 600);

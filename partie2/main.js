@@ -57,12 +57,15 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
 
         while (temps <= tempsSimulation) {
             if (temps <= 20) {
+                logger.info("\n\n");
                 logger.info("===============TEMPS DE SIMULATION : " + temps + "================");
                 logger.info("---Affichage des stations en début de minute:");
                 afficherStations(stations);
 
                 logger.info("---Affichage des clients dans la file avant placement:");
+                logger.info("***************************************************");
                 afficherFile(file);
+                logger.info("***************************************************");
             }
 
             const { clientsOrdinaires, clientsPrioritairesRelatifs, clientsPrioritairesAbsolus } = générerArrivées(Uns, temps);
@@ -73,7 +76,7 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
             if (temps <= 20) {
                 logger.info(
                     "Nombre d'arrivées: " +
-                        (clientsOrdinaires.length + clientsPrioritairesRelatifs.length + clientsOrdinaires.length)
+                        (clientsOrdinaires.length + clientsPrioritairesRelatifs.length + clientsPrioritairesAbsolus.length)
                 );
 
                 logger.info("Ordinaires: " + clientsOrdinaires.length);
@@ -84,7 +87,9 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
                 afficherFile(clientsPrioritairesAbsolus);
 
                 logger.info("---Affichage des clients dans la file après placement:");
+                logger.info("***************************************************");
                 afficherFile(file);
+                logger.info("***************************************************");
             }
 
             // Gestion du client absolu qui éjecte un client ordinaire avec la plus grande durée de service
@@ -158,11 +163,15 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
             }
 
             if (temps <= 20) {
+                
+                logger.info("\n");
                 logger.info("Affichage des stations en fin de minute");
                 afficherStations(stations);
 
                 logger.info("Affichage des clients dans la file en fin de minute");
+                logger.info("***************************************************");
                 afficherFile(file);
+                logger.info("***************************************************");
             }
 
             temps++;
@@ -231,32 +240,37 @@ function afficherStations(stations) {
     if (stations.length === 0) {
         logger.info("Aucune station occupée");
     } else {
+        logger.info("--------------------------------------------------------------------------");
         for (const iStation in stations) {
             afficherStation(stations[iStation], iStation);
         }
+        logger.info("--------------------------------------------------------------------------");
     }
 }
 
 function afficherStation(client, iStation) {
+    
     if (client !== undefined) {
         logger.info(
-            `Station ${iStation} - Client ${client.typeString} (${client.id}) durée de service restant : ${client.duréeService}`
+            `|| Station ${iStation} - Client ${client.typeString} (${client.id}) durée de service restant : ${client.duréeService} \t||`
         );
     } else {
-        logger.info(`Station ${iStation} - vide`);
+        logger.info(`|| Station ${iStation} - vide \t||`);
     }
 }
 
 function afficherFile(file) {
+    
     for (let iClient = 0; iClient < file.length; iClient++) {
         const client = file[iClient];
 
         if (client.duréeService !== undefined) {
-            logger.info(`[${iClient + 1}] - ${client.typeString} (${client.id}) | Durée de service: ${client.duréeService}`);
+            logger.info(`| [${iClient + 1}] - ${client.typeString} (${client.id}) | Durée de service: ${client.duréeService} \t|`);
         } else {
-            logger.info(`[${iClient + 1}] - ${client.typeString}`);
+            logger.info(`| [${iClient + 1}] - ${client.typeString} \t|`);
         }
     }
+    
 }
 
 function rechercheMin(couts) {
@@ -396,4 +410,4 @@ function coutPerteClients(nbPrioritairesPartis, nbOrdinairesPartis) {
     return (nbPrioritairesPartis / 60) * PERTE.PRIORITAIRE + (nbOrdinairesPartis / 60) * PERTE.ORDINAIRE;
 }
 
-nbStationsOptimal(6, 10, 600);
+nbStationsOptimal(1, 20, 600);

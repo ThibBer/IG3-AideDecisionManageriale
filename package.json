@@ -5,7 +5,9 @@
     "main": "partie1.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "dev": "nodemon partie1.js"
+        "dev": "nodemon partie1.js",
+        "cli": "node partie2/cli.js",
+        "simulation": "node partie2/cli.js simulation"
     },
     "repository": {
         "type": "git",

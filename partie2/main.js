@@ -1,4 +1,3 @@
-import winston from "winston";
 import { genRandom, u } from "../partie1func.js";
 import { Client } from "./client.js";
 import {
@@ -12,29 +11,24 @@ import {
     PROPORTION_ABSOLU,
     TYPE_CLIENT,
 } from "./constant.js";
+import logger from "./logger.js";
 
 // const m = 4000,
 //     a = 21,
 //     c = 713,
 //     x0 = 1;
-const m = 3625,
-    a = 146,
-    c = 112,
-    x0 = 1;
-// const m = 6000,
-//     a = 361,
-//     c = 1243,
+// const m = 3625,
+//     a = 146,
+//     c = 112,
 //     x0 = 1;
-
-const logger = winston.createLogger({
-    level: "debug",
-    format: winston.format.simple(),
-    transports: [new winston.transports.Console(), new winston.transports.File({ filename: "sortie.log" })],
-});
+const M = 6000,
+    A = 361,
+    C = 1243,
+    X0 = 1;
 
 const repetDS = new Array(10).fill(0);
 
-function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
+function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation, { m = M, a = A, c = C, x0 = X0 }) {
     // autant la faire en dernier pour pourvoir tester petit à petit
 
     let nbStations = nbStationMin;
@@ -180,6 +174,22 @@ function nbStationsOptimal(nbStationMin, nbStationMax, tempsSimulation) {
 
     const nbStationsOptimalTrouvees = rechercheMin(couts) + nbStationMin;
     logger.info("Nombre de stations optimale: " + nbStationsOptimalTrouvees);
+    const infos = {
+        systeme: [],
+        station: [],
+        innocupation: [],
+        perte: [],
+        total: [],
+    };
+    for (let i = 0; i < couts.length; i++) {
+        infos.systeme.push(couts[i].systeme);
+        infos.station.push(couts[i].station);
+        infos.innocupation.push(couts[i].innocupationStations);
+        infos.perte.push(couts[i].perteClients);
+        infos.total.push(couts[i].systeme + couts[i].station + couts[i].innocupationStations + couts[i].perteClients);
+    }
+    logger.debug("Couts des différentes stations");
+    logger.debug(JSON.stringify(infos));
 }
 
 function indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale(stations) {
@@ -396,4 +406,6 @@ function coutPerteClients(nbPrioritairesPartis, nbOrdinairesPartis) {
     return (nbPrioritairesPartis / 60) * PERTE.PRIORITAIRE + (nbOrdinairesPartis / 60) * PERTE.ORDINAIRE;
 }
 
-nbStationsOptimal(6, 10, 600);
+// nbStationsOptimal(1, 20, 600);
+
+export { nbStationsOptimal };

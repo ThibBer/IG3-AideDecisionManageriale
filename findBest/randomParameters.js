@@ -29,6 +29,4 @@ function validFiles(mMin, paths) {
     return paths.filter((path) => parseInt(path.split("-")[2], 10) >= mMin);
 }
 
-getParameters(900).then(console.log);
-
 export default getParameters;

@@ -6,6 +6,7 @@ Par minute
 
 Générer les clients prioritaires selon Poisson 0.7
 Générer les clients ordinaires selon Poisson 2
+Générer les durées de service selon Poisson 2.19
 Parmis les prioritaires:
  - 30% sont prioritaires absolus
  - 70% sont prioritaires relatifs
@@ -16,12 +17,27 @@ Prioritaire absolu arrive :
  - Ejecte le client ordinaire en station qui a la plus grande durée de service restante
    - Ce dernier devient prioritaire absolu et sera placé au début de la file
 Impatience : Si temps d'attente == 10 minutes et pas dans les 3 premiers, il part
+
+Pour les tableaux, nous utilisons la méthode "splice" du javascript pour modifier le contenu d'un tableau
+https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+
+tab.splice(index, nb_elements_a_supprimer, ...element_a_ajouter)
+index= l'index de début, là où il faut retirer ou ajouter des éléments
+nb_elements_a_supprimer= le nombre d'éléments à retirer (0 si il n'y en a pas)
+element_a_ajouter= les éléments à ajouter (vide si il n'y en a pas)
+
 Temps de simulation: 600
 
 Objet Client
  -> type (ABSOLU, RELATIF, ORDINAIRE)
  -> tempsArrivée
  -> duréeService
+
+ object Cout
+ -> systeme
+ -> station
+ -> innocupationStations
+ -> perteClients
 
 ORDINAIRE = 0
 RELATIF = 1
@@ -52,6 +68,7 @@ module(nbStationsOptimal;nbStationsMin, nbStationsMax, tempsSimul;nbStationsOpti
 ---* nbStationsOptimal
 
 nbStations = nbStationsMin
+couts = []
 
 do while(nbStations <= nbStationsMax)
     file = []
@@ -71,7 +88,9 @@ do while(nbStations <= nbStationsMax)
     temps = 1
     obtenir m, c, a , x0
     // pré : les valeurs pour m, c, a et x0 ont été calculées pour maximiser la période
-    module(suiteUn;m,c,a,x0; Uns) // taille de la suite au moins > tempsSimul
+    //       et ils passent le test du carré unité
+    // post: Uns est un générateur (faire: Uns.next().value pour obtenir la valeur suivante)
+    module(suiteUn;m,c,a,x0; Uns)
 
     do while(temps <= tempsSimul)
         if (temps <= 20)
@@ -82,7 +101,7 @@ do while(nbStations <= nbStationsMax)
             module(afficherFile; file, tailleFile)
         endif
 
-        module(générerArrivées;Uns[temps - 1], temps;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
+        module(générerArrivées;Uns, temps;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbClientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
 
         // Ajout des nouveaux clients dans la file
         module(ajoutFile;file, tailleFile, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, ABSOLU;file, tailleFile)
@@ -101,7 +120,7 @@ do while(nbStations <= nbStationsMax)
 
         // Gestion du client absolu qui éjecte un client ordinaire avec la plus grande durée de service
         module(rechercheFinType;file, tailleFile, ABSOLU; nbAbsolus)
-        module(indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale;stations,nbStations;iStation)
+        module(indiceStationPourAbsolu;stations,nbStations;iStation)
         nbExclus = 0
         do while(nbExclus < nbAbsolus && iStation > -1)
             // tabElementsSupprimes = array.splice(début, nbASupprimer[, élem1[, élem2[, ...]]])
@@ -112,7 +131,7 @@ do while(nbStations <= nbStationsMax)
             file.unshift(ancienClient) //Ajoute au début de la file
             nbExclus++
 
-            module(indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale;stations,nbStations;iStation)
+            module(indiceStationPourAbsolu;stations,nbStations;iStation)
         enddo
 
         // Place les clients de la file d'attente dans une station vide et décrémente le temps service
@@ -147,7 +166,7 @@ do while(nbStations <= nbStationsMax)
 
         iClient = 0
         do while (iClient < tailleFile)
-            if (file[iClient].tempsArrivée + 10 > temps)
+            if (temps - file[iClient].tempsArrivée >= 10 AND iClient >= 3)
                 if (file[iClient].type == ORDINAIRE)
                     nbOrdinairesPartis++
                 else
@@ -179,19 +198,45 @@ do while(nbStations <= nbStationsMax)
         temps++
     enddo
 
-    module(coutsNStation;nbMinutesSystemeOrdinaire, nbMinutesSystemeRelatif, nbMinutesSystemeAbsolu, nbMinutesStationPrioritaire, nbMinutesStationOrdinaire, nbPrioritairesPartis, nbOrdinairesPartisn, nbMinutesStationInnocupée;cout)
+    module(coutSysteme; nbMinutesSystemeOrdinaire, nbMinutesSystemeRelatif, nbMinutesSystemeAbsolu; coutSysteme)
+    module(coutStation; nbMinutesStationPrioritaire, nbMinutesStationOrdinaire; coutStation)
+    module(innocupationStations; nbMinutesStationInnocupée; innocupationStations)
+    module(coutPerteClients; nbPrioritairesPartis, nbOrdinairesPartis; coutPerteClients)
 
-    couts[nbStations - nbStationsMin] = cout
+    couts[nbStations - nbStationsMin] = {systeme = coutSysteme, station = coutStation, innocupationStations = innocupationStations, perteClients = coutPerteClients}
 
     nbStations++
 enddo
 
+module(afficherCoutsStations;couts, nbStationsMax - nbStationsMin, nbStationsMin)
+
 module(rechercheMin; couts, nbStationsMax - nbStationsMin; nbStationsOptimal)
+sortie "Nombre de stations optimale: ", nbStationsOptimal
+
+infos = {
+    systeme: [],
+    station: [],
+    innocupation: [],
+    perte: [],
+    total: [],
+}
+
+for (let i = 0; i < couts.length; i++) {
+    infos.systeme.push(couts[i].systeme);
+    infos.station.push(couts[i].station);
+    infos.innocupation.push(couts[i].innocupationStations);
+    infos.perte.push(couts[i].perteClients);
+    infos.total.push(couts[i].systeme + couts[i].station + couts[i].innocupationStations + couts[i].perteClients);
+}
+
+
+sortie "Couts des différentes stations"
+sortie infos
 ----
 
-module(indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale; stations, nbStations; iStationDureeServiceMax)
----* indiceDeLaStationOùLeClientEstOrdinaireEtAvecLaDuréeDeServiceMaximale
-dureeServiceMax = LV
+module(indiceStationPourAbsolu; stations, nbStations; iStationDureeServiceMax)
+---* indiceStationPourAbsolu
+dureeServiceMax = -1
 iStationDureeServiceMax = -1
 
 iStation = 0
@@ -213,15 +258,31 @@ module(stationEstVide; station; stationEstVide)
     stationEstVide = station == NULL or station == 0
 ----
 
+module(afficherCoutsStations; couts, nbCouts, nbStationMin;)
+---* afficherCoutsStations
+    iCout = 0
+
+    do while(iCout < nbCouts)
+        cout = couts[iCout]
+
+        module(coutNStations; cout; coutNStations)
+        sortie iCout + nbStationsMin, " stations(s) ouvertes -> Cout du système : ", cout.systeme, " | Cout stations: ", cout.station, " |Cout innocupation du système: ", cout.innocupationStations, " | Cout de perte de clients: ", cout.perteClients, " \n\tCout total: , coutNStations
+    enddo
+----
+
 module(afficherStations; stations, nbStations)
 ---* afficherStations
-iStation = 0
+if(nbStations == 0)
+    sortie "Aucune station occupée"
+else
+    iStation = 0
 
-do while(iStation < nbStations)
-    module(afficherStation; stations[iStation], iStation)
+    do while(iStation < nbStations)
+        module(afficherStation; stations[iStation], iStation)
 
-    iStation++
-enddo
+        iStation++
+    enddo
+endif
 ----
 
 module(afficherStation;client, iStation;)
@@ -257,8 +318,10 @@ coutMin = HV
 nbStationsOptimal = -1
 
 do while(iStation < nbStations)
-    if(couts[iStation] < countMin)
-        countMin = couts[iStation]
+    module(coutNStations; couts[iStation]; coutsStations)
+
+    if(coutsStations < countMin)
+        countMin = coutsStations
         nbStationsOptimal = iStation
     endif
 
@@ -268,50 +331,65 @@ enddo
 
 module(initStations;nbStations;stations)
 ---* initStations
-stations = nouveau tableau stations de longueur nbStations
+stations = nouveau tableau stations de longueur nbStations // Contient le client de la station
 ----
 
-module(générerArrivées;Un, temps;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbclientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus, temps)
+module(générerArrivées;Un, temps;clientsOrdinaires, nbClientsOrdinaires, clientsPrioritairesRelatifs, nbclientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus)
 ---* générerArrivées
-module(valeurPoisson;Un, POISSON_CLIENTS_PRIORITAIRES;nbClientsPrioritaires)
-module(valeurPoisson;Un, POISSON_CLIENTS_ORDINAIRES;nbClientsOrdinaires)
-
-nbClientsPrioritairesAbsolus = [nbClientsPrioritaires * 0.3]ENT
-nbClientsPrioritaires = nbClientsPrioritaires - nbClientsPrioritairesAbsolus
 
 // Générer les objets clients ordinaires
-module(générerClients; nbClientsOrdinaires, ORDINAIRE, temps; clientsOrdinaires)
-module(générerClients; nbClientsPrioritaires, RELATIF, temps; clientsPrioritairesRelatifs)
-module(générerClients; nbClientsPrioritairesAbsolus, ABSOLU, temps; clientsPrioritairesAbsolus)
+module(générerClients; POISSON_CLIENTS_ORDINAIRES, ORDINAIRE, temps, Uns; clientsOrdinaires, nbClientsOrdinaires)
+module(générerClients; POISSON_CLIENTS_PRIORITAIRES, PRIORITAIRE, temps, Uns; clientsPrioritaires)
+module(séparerPrioritaires;clientsPrioritaires; clientsPrioritairesRelatifs,clientsPrioritairesRelatifs, clientsPrioritairesAbsolus, nbClientsPrioritairesAbsolus)
+
 tailleFile += nbClientsOrdinaires + nbClientsPrioritaires + nbClientsPrioritairesAbsolus
 ----
 
-module(générerClients; nbClients, type, temps; clients)
----* générerClients
-    iClient = 0
-    clients = []
+module(duréeServiceGénérée; lambda, Uns; x)
+---*
+    done, u = Uns.next()
+    if(done)
+        throw new Error("Aucun nombre aléatoire disponible")
+    endif
 
-    do while(iClient < nbClients)
-        client = {}
-
-        client.type = type
-        client.tempsArrivée = temps
-
-        module(générerDuréeService;;duréeService)
-        client.duréeService = duréeService
-
-        clients.push(client)
-    enddo
+    if u < 0.387096774
+        x = 1
+    else if u < 0.677419355
+        x = 2
+    else if u < 0.85483871
+        x = 3
+    else if u <  0.919354839
+        x = 4
+    else if u < 0.967741935
+        x = 5
+    else if u < 1
+        x = 6
 ----
 
-module(valeurPoisson;Un, lambda;x)
----* valeurPoisson
-cumulDesProbas = 0
-x = 0
-do while(Un >= cumulDesProbas)
-    cumulDesProbas += (e**-lambda * lamba**x) / x! // ** = exposant
-    x++
-enddo
+// https://en.wikipedia.org/wiki/Poisson_distribution#Generating_Poisson-distributed_random_variables
+module(générerClients; lambda, type, temps, Uns; clients)
+---* générerClients
+    clients = [];
+    nbClients = 0;
+    const L = Math.exp(-lambda);
+    let p = 1;
+    do while (p > L)
+        u, done = Uns.next(); // done est vrai quand il n'y a plus de nombre dans la suite
+        if (done)
+            throw new Error("Aucun nombre aléatoire disponible");
+        else
+            module(duréeServiceGénérée,POISSON_DUREE_SERVICES, Uns; duréeService))
+            repetDS[duréeService]++;
+            if (type == PRIORITAIRE && u < 0.3)
+                type = ABSOLU
+            else
+                type = RELATIF
+            endif
+            clients[nbClients] = {type: type, duréeService: duréeService, tempsArrivée: temps}
+            nbClients++
+            p *= u;
+        endif
+    enddo
 ----
 
 // Premier indice qui ne correspond pas au type (là où l'insertion va se faire)
@@ -332,32 +410,37 @@ module(ajoutFile;file, tailleFile, clients, nbClients, type; file, tailleFile)
 iNouvelleArrivee = 0
 module(rechercheFinType;file, tailleFile, type; indice)
 do while(iNouvelleArrivee < nbClients)
-    file[indice] = clients[iNouvelleArrivee]
+    file.splice(indice, 0, clients[iNouvelleArrivee])
     indice++
     tailleFile++
     iNouvelleArrivee++
 enddo
 ----
 
+module(coutNStation;cout;totalCouts)
+---* coutNStation
+totalCouts = cout.systeme + cout.stations + cout.innocupationStations + cout.perteClients
+----
 
+module(coutSysteme;nbMinutesSystemeOrdinaire, nbMinutesSystemeRelatif, nbMinutesSystemeAbsolu;coutSysteme)
+---* coutSysteme
+coutSysteme = (nbMinutesSystemeOrdinaire / 60) * COUTS_HORAIRE_SYSTEME.ORDINAIRE;
+coutSysteme += (nbMinutesSystemeRelatif / 60) * COUTS_HORAIRE_SYSTEME.RELATIF;
+coutSysteme += (nbMinutesSystemeAbsolu / 60) * COUTS_HORAIRE_SYSTEME.ABSOLU;
+----
 
-module(coutsNStation;nbMinutesSystemeOrdinaire, nbMinutesSystemeRelatif, nbMinutesSystemeAbsolu, nbMinutesStationPrioritaire, nbMinutesStationOrdinaire, nbPrioritairesPartis, nbOrdinairesPartis, nbMinutesStationInnocupée;cout)
----* coutsNStation
-cout = 0
-// présence système ordinaire
-cout += nbMinutesSystemeOrdinaire / 60 * COUTS_HORAIRE_SYSTEME.ORDINAIRE
-// système relatif
-cout += nbMinutesSystemeRelatif / 60 * COUTS_HORAIRE_SYSTEME.PRIORITAIRE_RELATIF
-// système absolu
-cout += nbMinutesSystemeAbsolu / 60 * COUTS_HORAIRE_SYSTEME.PRIORITAIRE_ABSOLU
-// station prioritaire
-cout += nbMinutesStationPrioritaire / 60 * COUTS_HORAIRE_OCCUPATION.PRIORITAIRE
-// station ordinaire
-cout += nbMinutesStationOrdinaire / 60 * COUTS_HORAIRE_OCCUPATION.ORDINAIRE
-// inoccupation stations
-cout += nbMinutesStationInnocupée / 60 * COUT_HORAIRE_INNOCUPATION
-// perte d'un client prioritaire
-cout += nbPrioritairesPartis / 60 * PERTES.PRIORITAIRE
-// perte d'un client ordinaire
-cout += nbOrdinairesPartis / 60 * PERTES.ORDINAIRE
+module(coutStation;nbMinutesStationPrioritaire, nbMinutesStationOrdinaire;coutStation)
+---* coutStation
+    coutStation = (nbMinutesStationPrioritaire / 60) * COUTS_HORAIRE_OCCUPATION.PRIORITAIRE;
+    coutStation += (nbMinutesStationOrdinaire / 60) * COUTS_HORAIRE_OCCUPATION.ORDINAIRE;
+----
+
+module(coutInnocupationStations;nbMinutesStationInnocupée;coutInnocupationStations)
+---* coutInnocupationStations
+    coutInnocupationStations = (nbMinutesStationInnocupée / 60) * COUT_HORAIRE_INNOCUPATION
+----
+
+module(coutPerteClients;nbPrioritairesPartis, nbOrdinairesPartis;coutPerteClients)
+---* coutPerteClients
+    coutPerteClients = nbPrioritairesPartis * PERTE.PRIORITAIRE + nbOrdinairesPartis * PERTE.ORDINAIRE;
 ----

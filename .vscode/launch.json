@@ -9,7 +9,8 @@
             "request": "launch",
             "name": "Launch Program",
             "skipFiles": ["<node_internals>/**"],
-            "program": "${workspaceFolder}\\partie2\\main.js",
+            "program": "${workspaceFolder}\\partie2\\cli.js",
+            "args": ["s"],
             "console": "integratedTerminal"
         }
     ]

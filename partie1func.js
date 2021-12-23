@@ -1,5 +1,5 @@
 import { getKhi2 } from "./khi2.js";
-import { setKhi, setTable } from "./saveFile.js";
+import { save, setKhi, setTable } from "./saveFile.js";
 
 function formuleCongruentielleLinéaireMixte(m, a, c, xn) {
     return (a * xn + c) % m;
@@ -15,7 +15,7 @@ function y(u) {
 function* genRandom(m, a, c, x0, method = (x) => x) {
     yield method(x0);
     let xn = x0;
-    for (let n = 0; n < m; n++) {
+    for (let n = 0; n < m - 1; n++) {
         xn = formuleCongruentielleLinéaireMixte(m, a, c, xn);
         yield method(xn);
     }
@@ -125,62 +125,10 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
     const khi2Obs = getKhi2Obs(valeurs, n);
     const khi2 = getKhi2(alpha, dl);
     if (saveFile) {
-        setKhi(khi2Obs, khi2);
+        setKhi(khi2Obs, khi2, dl);
+        save();
     }
     return khi2Obs < khi2;
 }
 
-function testCarréUnite({ suiteUns, alpha = 0.05, saveFile = false }) {
-    if (suiteUns === undefined) throw new Error("suiteUns is undefined");
-    let n = 0;
-    const valeurs = [];
-    const pi = genPi();
-    for (let x = 0; x < 20; x += 1) {
-        valeurs[x] = {
-            ri: 0,
-            pi: pi.next().value,
-        };
-    }
-
-    for (let n = 0; n <= suiteUns.length - 4; n += 4) {
-        const distance = distanceCarre(suiteUns[n], suiteUns[n + 1], suiteUns[n + 2], suiteUns[n + 3]);
-
-        const val = Math.floor(distance * 10);
-        valeurs[val].ri += 1;
-    }
-
-    //! Ici, on commence par le bas et on remonte en additionnant tant qu'on a pas npi > 5
-    for (let i = valeurs.length - 2; i >= 0; i--) {
-        while (i >= 0 && valeurs[i].pi * n < 5) {
-            valeurs[i].pi += valeurs[i + 1].pi;
-            valeurs[i].ri += valeurs[i + 1].ri;
-            valeurs.pop();
-            i--;
-        }
-    }
-    const dl = valeurs.length - 1;
-    const khi2Obs = getKhi2Obs(valeurs, n);
-    const khi2 = getKhi2(alpha, dl);
-    return khi2Obs < khi2;
-}
-
-// const m = 63;
-// const a = 22;
-// const c = 4;
-// const x0 = 19;
-// console.time("carre");
-
-// try {
-//     verificationThHullDobell(m, a, c);
-//     if (testCarréUniteGen({ suiteUns: genRandom(m, a, c, x0, u(m)) })) {
-//         console.log("OK");
-//     }
-//     if (testCarréUnite({ suiteUns: [...genRandom(m, a, c, x0, u(m))] })) {
-//         console.log("OK");
-//     }
-// } catch (e) {
-//     console.log(e);
-// }
-// console.timeEnd("carre");
-
-export { testCarréUnite, testCarréUniteGen, genRandom, u, y };
+export { testCarréUniteGen, genRandom, u, y };

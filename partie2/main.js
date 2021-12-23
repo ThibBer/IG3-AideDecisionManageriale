@@ -94,6 +94,7 @@ function nbStationsOptimal(nbStationsMin, nbStationsMax, tempsSimulation, { m = 
             const nbAbsolus = rechercheFinType(file, TYPE_CLIENT.ABSOLU);
             let nbExclus = 0;
             while (nbExclus < nbAbsolus && iStationVide > -1) {
+                // logger.warn("Ejection d'un client absolu");
                 const client = file.splice(nbExclus, 1)[0];
                 const ancienClient = stations[iStationVide];
                 if (ancienClient !== undefined && ancienClient.duréeService > 0) {
@@ -136,6 +137,7 @@ function nbStationsOptimal(nbStationsMin, nbStationsMax, tempsSimulation, { m = 
             let iClient = 0;
             while (iClient < file.length) {
                 if (temps - file[iClient].tempsArrivée >= 10 && iClient >= 3) {
+                    // logger.warn("Ejection IMPATIENCE");
                     if (file[iClient].type === TYPE_CLIENT.ORDINAIRE) {
                         nbOrdinairesPartis++;
                     } else {
@@ -206,8 +208,8 @@ function nbStationsOptimal(nbStationsMin, nbStationsMax, tempsSimulation, { m = 
                 couts[i].perteClients
         );
     }
-    // logger.debug("Couts des différentes stations");
-    // logger.debug(JSON.stringify(infos));
+    logger.debug("Couts des différentes stations");
+    logger.debug(JSON.stringify(infos));
 }
 
 function indiceStationPourAbsolu(stations) {

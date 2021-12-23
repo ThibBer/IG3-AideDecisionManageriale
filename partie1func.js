@@ -109,7 +109,7 @@ function testCarréUniteGen({ suiteUns, alpha = 0.05, saveFile = false }) {
     }
     //! Ici, on commence par le bas et on remonte en additionnant tant qu'on a pas npi > 5
     for (let i = valeurs.length - 2; i >= 0; i--) {
-        while (i >= 0 && valeurs[i].pi * n < 5) {
+        while (i >= 0 && valeurs[i + 1].pi * n < 5) {
             valeurs[i].pi += valeurs[i + 1].pi;
             valeurs[i].ri += valeurs[i + 1].ri;
             valeurs.pop();

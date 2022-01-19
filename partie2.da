@@ -364,6 +364,7 @@ module(duréeServiceGénérée; lambda, Uns; x)
         x = 5
     else if u < 1
         x = 6
+    endif
 ----
 
 // https://en.wikipedia.org/wiki/Poisson_distribution#Generating_Poisson-distributed_random_variables
